@@ -28,6 +28,11 @@ private slots:
     void onProcessCompleted(Process p , int numCompleted);
     void onProcessExecuting(Process p);
     void showStatistics() ;
+    void showFinalComparison();  // Affiche les stats finales
+    void displayStatsTable();    // Affiche le tableau
+    void displayChartWait();     // Graphique temps d'attente
+    void displayChartDeadlines(); // Graphique deadlines
+    void displayRecommendations(); // Recommandations
 
     QVector<Process> cloneProcesses(const QVector<Process> &original);
 

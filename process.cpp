@@ -89,5 +89,9 @@ void Process::set_executed(int time)
     initial_wait = time;
     total_wait = time;
 }
+void Process::set_deadline(int deadline)
+{
+    this->deadline = deadline;
+}
 int Process::get_deadline() const { return deadline; }
  bool Process::hasDeadline() const { return deadline > 0; }

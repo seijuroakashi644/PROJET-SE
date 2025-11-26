@@ -18,6 +18,7 @@ signals:
         void clockUpdated(int time);            // Mise à jour horloge
         void algorithmFinished();               // Algo terminé
         void logMessage(QString message);
+
 public:
     explicit AlgorithmBase(QString algorithName , QObject *parent = nullptr);
     virtual ~AlgorithmBase() {}
@@ -36,6 +37,7 @@ public:
    // Récupère le nom de l'algorithme
    QString getAlgorithmName() const { return m_algorithmName; }
    int getNumCompleted();
+   bool get_isrunning();
 protected:
 
 

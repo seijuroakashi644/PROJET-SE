@@ -12,6 +12,7 @@
 #include <QDebug>
 #include <QPropertyAnimation>
 #include <QGraphicsOpacityEffect>
+#include <QtCharts>
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -118,9 +119,9 @@ void MainWindow::onProcessArrived(Process p) {
     int i = p.get_pid() -1;
     // QString style = "border : 1px solid rgb(235,235,235)";
     QLabel * pid = new QLabel(QString("PID : %1").arg(p.get_pid()));
-    QLabel * burst_left_ui = new QLabel(QString("Temps restant : %1 ms").arg(p.get_burst_left()));
+    QLabel * burst_left_ui = new QLabel(QString("Temps restant : %1 min").arg(p.get_burst_left()));
     QLabel * priority_ui = new QLabel(QString("Priorité : %1 ").arg(p.get_priority()));
-    QLabel * deadline_ui = new QLabel(QString("Echéance : %1 ms").arg(p.get_deadline()));
+    QLabel * deadline_ui = new QLabel(QString("Echéance : %1 min").arg(p.get_deadline()));
     /*pid->setStyleSheet(style);
     burst_left_ui->setStyleSheet(style);
     priority_ui->setStyleSheet(style); */
@@ -172,13 +173,13 @@ void MainWindow::onProcessExecuting(Process p)
     QWidget *q = this->findChild<QWidget*>(QString("running_process"));
     q->setStyleSheet("background-color : white; border : 2px solid gray;border-radius : 10px");
     QLabel *l = this->findChild<QLabel*>(QString("rp_id"));
-    l->setText(QString("ID : %1").arg(p.get_pid()));
+    l->setText(QString("IDC : %1").arg(p.get_pid()));
     QLabel *l2 = this->findChild<QLabel*>(QString("rp_priority"));
     l2->setText(QString("Priorité : %1").arg(p.get_priority()));
     QLabel *l3 = this->findChild<QLabel*>(QString("rp_burst_left"));
-    l3->setText(QString("Temps restant : %1 ms").arg(p.get_burst_left()));
+    l3->setText(QString("Temps restant : %1 min").arg(p.get_burst_left()));
     QLabel *l4 = this->findChild<QLabel*>(QString("rp_waiting_time"));
-    l4->setText(QString("Temps attentu : %1 ms").arg(p.get_total_wait()));
+    l4->setText(QString("Temps attentu : %1 min").arg(p.get_total_wait()));
 
     l->setStyleSheet(style);
     l2->setStyleSheet(style);
@@ -235,8 +236,10 @@ void MainWindow::onAlgorithmFinished() {
     {
         ui->stackedWidget->setCurrentIndex(1);
     }
-    qDebug() << "FCFS terminé !";
+
     Statistics stats = current_scheduler->getStatistics();
+    qDebug() << " " << stats.algorithmName << "terminé ";
+
     qDebug() << "total turnaround:" << stats.getTotalTurnaround();
     qDebug() << "Avg turnaround:" << stats.getAvgTurnaround();
     qDebug() << "time simulation :" << current_scheduler->getclock();
@@ -254,7 +257,14 @@ void MainWindow::showStatistics() {
 
     // Quand l'animation est terminée, change de page et fade in
     connect(animOut, &QPropertyAnimation::finished, this, [this]() {
-        ui->stackedWidget->setCurrentIndex(1);  // Change de page
+        ui->stackedWidget->setCurrentIndex(1);
+        ui->lblStatsTitle->setText("🏆 Comparaison des Algorithmes d'Ordonnancement");
+
+            // Affiche les 3 éléments
+            displayStatsTable();
+            displayChartWait();
+            displayChartDeadlines();
+            displayRecommendations();// Change de page
 
         // Fade in de la nouvelle page
         QGraphicsOpacityEffect *fadeIn = new QGraphicsOpacityEffect(this);
@@ -269,61 +279,362 @@ void MainWindow::showStatistics() {
 
     animOut->start(QAbstractAnimation::DeleteWhenStopped);
 }
-QVector<Process> MainWindow::generateProcesses(int numProcesses)
-{
+QVector<Process> MainWindow::generateProcesses(int numProcesses) {
     QVector<Process> processes;
     QRandomGenerator *rng = QRandomGenerator::global();
 
     int numZero = numProcesses * 0.2;
     int numRand = numProcesses - numZero;
 
-    // Processus avec arrival = 0
+    int totalBurst = 0;
+
+    // Génère les processus
     for (int i = 0; i < numZero; i++) {
         int burst = rng->bounded(30, 561);
         int priority = rng->bounded(0, 5);
-        // ✅ Génère une deadline
-              // Deadline = burst + marge (50% à 150% du burst)
-              int margin = burst * (rng->bounded(50, 151) / 100.0);
-              int deadline = 0 + burst + margin;
-        processes.append(Process(burst, 0, i + 1, priority , deadline));
+        totalBurst += burst;
+        processes.append(Process(burst, 0, i + 1, priority, -1));
     }
 
-    // Processus avec arrival aléatoire
     for (int i = 0; i < numRand; i++) {
         int burst = rng->bounded(30, 561);
         int priority = rng->bounded(0, 5);
         double r = rng->generateDouble();
-        int arrival = -(qLn(r) / 0.001);
-        if (arrival > 3000) { i--; continue; }
-        // ✅ Génère une deadline
-          // Deadline = burst + marge (50% à 150% du burst)
-          int margin = burst * (rng->bounded(50, 151) / 100.0);
-          int deadline = 0 + burst + margin;
-        Process p = Process(burst , arrival , numZero +i +1 , priority , deadline);
+        int arrival = -(std::log(r) / 0.001);
+        if (arrival > 8000) { i--; continue; }
 
-        processes.append(p);
+        totalBurst += burst;
+        processes.append(Process(burst, arrival, numZero + i + 1, priority, -1));
     }
 
-    // Trier par arrival_time
+    // Tri
     std::sort(processes.begin(), processes.end(),
               [](const Process &a, const Process &b) {
                   return a.get_arrival() < b.get_arrival();
               });
 
-    // Réassigner les PIDs
+    // ✅ Calcul des deadlines réalistes
+    int avgBurst = totalBurst / numProcesses;
+    int maxArrival = processes.isEmpty() ? 0 : processes.last().get_arrival();
+
     for (int i = 0; i < processes.size(); i++) {
         processes[i].set_pid(i + 1);
+
+        // Deadline = arrival + burst + marge (2x à 5x le burst moyen)
+        int margin = avgBurst * rng->bounded(1, 3);
+        int deadline = processes[i].get_arrival() + processes[i].get_burst() + margin;
+        qDebug() << "deadline :  " << deadline ;
+
+        // S'assure que la deadline n'est pas trop lointaine
+        int maxDeadline = maxArrival + totalBurst;
+        if (deadline > maxDeadline) {
+            deadline = maxDeadline;
+        }
+
+        processes[i].set_deadline(deadline);
     }
-    int sum  =0 ;
-    for(int i = 0 ; i< processes.size()  ; i++)
-    {
-        sum += processes[i].get_burst();
+
+    // Debug
+    qDebug() << "=== Processus générés ===";
+    qDebug() << "Total burst:" << totalBurst << "ms";
+    qDebug() << "Avg burst:" << avgBurst << "ms";
+    for (const Process &p : processes) {
+        int minNeeded = p.get_arrival() + p.get_burst();
+        qDebug() << QString("P%1: arrival=%2, burst=%3, deadline=%4 (%5)")
+            .arg(p.get_pid())
+            .arg(p.get_arrival())
+            .arg(p.get_burst())
+            .arg(p.get_deadline())
+            .arg(p.get_deadline() >= minNeeded ? "OK" : "IMPOSSIBLE");
     }
-    qDebug() << "supposed simulation time " << sum << "ms";
+
     return processes;
 }
 
+void MainWindow::showFinalComparison()
+{
+    qDebug() << "=== Affichage des statistiques finales ===";
 
+    // Change vers la page des stats
+    ui->stackedWidget->setCurrentIndex(1);
+
+    // Affiche le titre
+    ui->lblStatsTitle->setText("🏆 Comparaison des Algorithmes d'Ordonnancement");
+
+    // Affiche les 3 éléments
+    displayStatsTable();
+    displayChartWait();
+    displayChartDeadlines();
+    displayRecommendations();
+}
+
+// ═══════════════════════════════════
+// 1️⃣ TABLEAU COMPARATIF
+// ═══════════════════════════════════
+
+void MainWindow::displayStatsTable()
+{
+    QString table = "<h3>📊 Tableau Comparatif</h3>";
+    qDebug() << "dans display table";
+    // En-tête du tableau HTML
+    table += "<table border='1' cellpadding='8' cellspacing='0' style='border-collapse: collapse; width: 100%;'>";
+    table += "<tr style='background-color: #34495e; color: white;'>";
+    table += "<th>Algorithme</th>";
+    table += "<th>Avg Wait (min)</th>";
+    table += "<th>Avg Turnaround (min)</th>";
+    table += "<th>Context Switches</th>";
+    table += "<th>Deadlines</th>";
+    table += "</tr>";
+
+    // Lignes de données
+    for (const Statistics &s : allStats) {
+        qDebug() << s.algorithmName;
+        table += "<tr>";
+        table += QString("<td><b>%1</b></td>").arg(s.algorithmName);
+        table += QString("<td>%1</td>").arg(s.getAvgWait(), 0, 'f', 2);
+        table += QString("<td>%1</td>").arg(s.getAvgTurnaround(), 0, 'f', 2);
+        table += QString("<td>%1</td>").arg(s.contextSwitches);
+
+        // Deadlines (si applicable)
+        int total = s.deadlinesRespected + s.deadlinesMissed;
+        if (total > 0) {
+            QString deadlineText = QString("%1/%2 (%3%)")
+                .arg(s.deadlinesRespected)
+                .arg(total)
+                .arg(s.getDeadlineRespectRate(), 0, 'f', 0);
+            table += QString("<td>%1</td>").arg(deadlineText);
+        } else {
+            table += "<td>N/A</td>";
+        }
+
+        table += "</tr>";
+    }
+
+    table += "</table>";
+
+    ui->txtStatsTable->setHtml(table);
+}
+
+
+// ═══════════════════════════════════
+// 2️⃣ GRAPHIQUE - TEMPS D'ATTENTE
+// ═══════════════════════════════════
+
+void MainWindow::displayChartWait()
+{
+    using namespace QtCharts;
+
+    // Crée le bar set
+    QBarSet *set = new QBarSet("Temps d'attente moyen");
+
+    QStringList categories;
+
+    // Ajoute les données
+    for (const Statistics &s : allStats) {
+        *set << s.getAvgWait();
+
+        // Nom court pour l'axe X
+        QString shortName = s.algorithmName;
+        if (shortName.contains("(")) {
+            shortName = shortName.left(shortName.indexOf("(")).trimmed();
+        }
+        categories << shortName;
+    }
+
+    // Couleur des barres
+    set->setColor(QColor("#3498db"));
+
+    // Crée la série
+    QBarSeries *series = new QBarSeries();
+    series->append(set);
+
+    // Crée le graphique
+    QChart *chart = new QChart();
+    chart->addSeries(series);
+    chart->setTitle("Temps d'attente moyen (min)");
+    chart->setAnimationOptions(QChart::SeriesAnimations);
+
+    // Axe X (noms des algos)
+    QBarCategoryAxis *axisX = new QBarCategoryAxis();
+    axisX->append(categories);
+    chart->addAxis(axisX, Qt::AlignBottom);
+    series->attachAxis(axisX);
+
+    // Axe Y (temps)
+    QValueAxis *axisY = new QValueAxis();
+    axisY->setTitleText("Temps (min)");
+    chart->addAxis(axisY, Qt::AlignLeft);
+    series->attachAxis(axisY);
+
+    // Légende
+    chart->legend()->setVisible(false);
+
+    // Affiche dans le widget
+    QChartView *chartView = new QChartView(chart);
+    chartView->setRenderHint(QPainter::Antialiasing);
+
+    // Nettoie l'ancien contenu
+    QLayout *oldLayout = ui->widgetChartWait->layout();
+    if (oldLayout) {
+        QLayoutItem *item;
+        while ((item = oldLayout->takeAt(0)) != nullptr) {
+            delete item->widget();
+            delete item;
+        }
+        delete oldLayout;
+    }
+
+    // Ajoute le nouveau graphique
+    QVBoxLayout *layout = new QVBoxLayout(ui->widgetChartWait);
+    layout->addWidget(chartView);
+    ui->widgetChartWait->setLayout(layout);
+}
+
+void MainWindow::displayChartDeadlines()
+{
+    using namespace QtCharts;
+
+    // Crée le bar set
+    QBarSet *set = new QBarSet("Taux de respect (%)");
+
+    QStringList categories;
+    bool hasDeadlines = false;
+
+    // Ajoute les données
+    for (const Statistics &s : allStats) {
+        int total = s.deadlinesRespected + s.deadlinesMissed;
+        if (total > 0) {
+            *set << s.getDeadlineRespectRate();
+            hasDeadlines = true;
+        } else {
+            *set << 0;
+        }
+
+        QString shortName = s.algorithmName;
+        if (shortName.contains("(")) {
+            shortName = shortName.left(shortName.indexOf("(")).trimmed();
+        }
+        categories << shortName;
+    }
+
+    // Si aucun algo n'a de deadlines, affiche un message
+    if (!hasDeadlines) {
+        QLabel *label = new QLabel("Aucune deadline définie", ui->widgetChartDeadlines);
+        label->setAlignment(Qt::AlignCenter);
+
+        QLayout *oldLayout = ui->widgetChartDeadlines->layout();
+        if (oldLayout) delete oldLayout;
+
+        QVBoxLayout *layout = new QVBoxLayout(ui->widgetChartDeadlines);
+        layout->addWidget(label);
+        return;
+    }
+
+    // Couleur des barres
+    set->setColor(QColor("#2ecc71"));
+
+    // Crée la série
+    QBarSeries *series = new QBarSeries();
+    series->append(set);
+
+    // Crée le graphique
+    QChart *chart = new QChart();
+    chart->addSeries(series);
+    chart->setTitle("Taux de respect des deadlines (%)");
+    chart->setAnimationOptions(QChart::SeriesAnimations);
+
+    // Axe X
+    QBarCategoryAxis *axisX = new QBarCategoryAxis();
+    axisX->append(categories);
+    chart->addAxis(axisX, Qt::AlignBottom);
+    series->attachAxis(axisX);
+
+    // Axe Y (0 à 100%)
+    QValueAxis *axisY = new QValueAxis();
+    axisY->setTitleText("Taux (%)");
+    axisY->setRange(0, 100);
+    chart->addAxis(axisY, Qt::AlignLeft);
+    series->attachAxis(axisY);
+
+    // Légende
+    chart->legend()->setVisible(false);
+
+    // Affiche
+    QChartView *chartView = new QChartView(chart);
+    chartView->setRenderHint(QPainter::Antialiasing);
+
+    QLayout *oldLayout = ui->widgetChartDeadlines->layout();
+    if (oldLayout) {
+        QLayoutItem *item;
+        while ((item = oldLayout->takeAt(0)) != nullptr) {
+            delete item->widget();
+            delete item;
+        }
+        delete oldLayout;
+    }
+
+    QVBoxLayout *layout = new QVBoxLayout(ui->widgetChartDeadlines);
+    layout->addWidget(chartView);
+    ui->widgetChartDeadlines->setLayout(layout);
+}
+void MainWindow::displayRecommendations()
+{
+    // Trouve les meilleurs pour chaque critère
+    Statistics bestWait = allStats[0];
+    Statistics bestTurnaround = allStats[0];
+    Statistics bestSwitches = allStats[0];
+    Statistics bestDeadlines = allStats[0];
+
+    for (const Statistics &s : allStats) {
+        if (s.getAvgWait() < bestWait.getAvgWait())
+            bestWait = s;
+
+        if (s.getAvgTurnaround() < bestTurnaround.getAvgTurnaround())
+            bestTurnaround = s;
+
+        if (s.contextSwitches < bestSwitches.contextSwitches)
+            bestSwitches = s;
+
+        if (s.getDeadlineRespectRate() > bestDeadlines.getDeadlineRespectRate())
+            bestDeadlines = s;
+    }
+
+    // Crée le texte de recommandation
+    QString reco = "<h3>🎯 Recommandations</h3>";
+    reco += "<p style='line-height: 1.8;'>";
+
+    reco += QString("✅ <b>Meilleur pour temps d'attente</b> : %1 (<b>%2 min</b>)<br>")
+        .arg(bestWait.algorithmName)
+        .arg(bestWait.getAvgWait(), 0, 'f', 2);
+
+    reco += QString("✅ <b>Meilleur pour temps de rotation</b> : %1 (<b>%2 min</b>)<br>")
+        .arg(bestTurnaround.algorithmName)
+        .arg(bestTurnaround.getAvgTurnaround(), 0, 'f', 2);
+
+    reco += QString("✅ <b>Meilleur pour efficacité</b> (moins de switches) : %1 (<b>%2 switches</b>)<br>")
+        .arg(bestSwitches.algorithmName)
+        .arg(bestSwitches.contextSwitches);
+
+    int totalDeadlines = bestDeadlines.deadlinesRespected + bestDeadlines.deadlinesMissed;
+    if (totalDeadlines > 0) {
+        reco += QString("✅ <b>Meilleur pour deadlines</b> : %1 (<b>%2%</b>)<br>")
+            .arg(bestDeadlines.algorithmName)
+            .arg(bestDeadlines.getDeadlineRespectRate(), 0, 'f', 0);
+    }
+
+    reco += "</p>";
+
+    // Conseil personnalisé
+   /* reco += "<hr>";
+    reco += "<h4>💡 Conseil pour votre atelier :</h4>";
+    reco += "<ul>";
+    reco += QString("<li>Si vous avez des <b>commandes urgentes</b> → %1</li>").arg(bestDeadlines.algorithmName);
+    reco += QString("<li>Si vous voulez <b>minimiser l'attente</b> → %1</li>").arg(bestWait.algorithmName);
+    reco += QString("<li>Si vous voulez un système <b>simple et équitable</b> → FCFS</li>");
+    reco += "</ul>";*/
+
+    ui->lblRecommandations->setText(reco);
+}
 
 void MainWindow::on_label_linkActivated(const QString &link)
 {
@@ -333,7 +644,14 @@ void MainWindow::on_label_linkActivated(const QString &link)
 
 void MainWindow::on_btnPause_clicked()
 {
-    current_scheduler->pause();
+    if(current_scheduler->get_isrunning())
+    {current_scheduler->pause();}
+    else{
+        current_scheduler->play();
+    }
+
+
+
 }
 
 

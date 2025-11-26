@@ -46,6 +46,25 @@ void sjf::executeStep()
 
        // Vérifie si terminé
        if (current.get_burst_left() == 0) {
+           if (current.hasDeadline()) {
+               if (m_clock <= current.get_deadline()) {
+                   m_stats.deadlinesRespected++;
+                   emit logMessage("✅ Deadline respectée");
+                   emit logMessage(QString("✅ [%1ms] Process %2 completed ON TIME (deadline: %3ms)")
+                       .arg(m_clock)
+                       .arg(current.get_pid())
+                       .arg(current.get_deadline()));
+               } else {
+                   m_stats.deadlinesMissed++;  // ← AJOUTE
+                   emit logMessage("❌ Deadline manquée");
+                   int lateness = m_clock - current.get_deadline();
+                   emit logMessage(QString("❌ [%1ms] Process %2 MISSED DEADLINE by %3ms (was: %4ms)")
+                       .arg(m_clock)
+                       .arg(current.get_pid())
+                       .arg(lateness)
+                       .arg(current.get_deadline()));
+               }
+           }
            recordCompletion(current);
            m_lastPid = current.get_pid();
            m_queue.removeFirst();

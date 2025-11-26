@@ -34,6 +34,8 @@ public:
             int get_pid() const;
             int get_deadline() const;
             bool hasDeadline() const ;
+            void set_deadline(int deadline) ;
+
 
 };
 

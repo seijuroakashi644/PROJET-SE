@@ -20,6 +20,9 @@ struct Statistics
         int numProcesses ;
         int contextSwitches;
 
+        int deadlinesRespected;
+         int deadlinesMissed;
+
 
         // Constructeur avec valeurs par défaut
         Statistics(QString name = "Unknown")
@@ -34,7 +37,9 @@ struct Statistics
               minInitialWait(999999.0),
               maxInitialWait(0.0),
               numProcesses(0),
-              contextSwitches(0)
+              contextSwitches(0),
+              deadlinesRespected(0),
+              deadlinesMissed(0)
         {}
         // Calcule les moyennes
            double getAvgTurnaround() const {
@@ -51,6 +56,10 @@ struct Statistics
            double getTotalTurnaround() const {
                return  totalTurnaround;
            }
+           double getDeadlineRespectRate() const {
+                  int total = deadlinesRespected + deadlinesMissed;
+                  return total > 0 ? (deadlinesRespected * 100.0 / total) : 0.0;
+              }
            // Enregistre les métriques d'un processus terminé
            void recordProcess(int turnaround, int totalWaitTime, int initialWait) {
                numProcesses++;
@@ -84,6 +93,8 @@ struct Statistics
                maxInitialWait = 0.0;
                numProcesses = 0;
                contextSwitches = 0;
+               deadlinesRespected = 0;
+               deadlinesMissed = 0;
            }
 
 

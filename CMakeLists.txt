@@ -11,8 +11,9 @@ set(CMAKE_AUTORCC ON)
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-find_package(QT NAMES Qt6 Qt5 COMPONENTS Widgets REQUIRED)
-find_package(Qt${QT_VERSION_MAJOR} COMPONENTS Widgets REQUIRED)
+# Trouve Qt (Widgets + Charts)
+find_package(QT NAMES Qt6 Qt5 COMPONENTS Widgets Charts REQUIRED)
+find_package(Qt${QT_VERSION_MAJOR} COMPONENTS Widgets Charts REQUIRED)
 
 set(PROJECT_SOURCES
         main.cpp
@@ -34,7 +35,6 @@ set(PROJECT_SOURCES
         round_robin_multiniveaux.cpp
         edf.h
         edf.cpp
-
 )
 
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
@@ -42,25 +42,16 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
         MANUAL_FINALIZATION
         ${PROJECT_SOURCES}
     )
-# Define target properties for Android with Qt 6 as:
-#    set_property(TARGET PROJET_SE APPEND PROPERTY QT_ANDROID_PACKAGE_SOURCE_DIR
-#                 ${CMAKE_CURRENT_SOURCE_DIR}/android)
-# For more information, see https://doc.qt.io/qt-6/qt-add-executable.html#target-creation
 else()
     if(ANDROID)
-        add_library(PROJET_SE SHARED
-            ${PROJECT_SOURCES}
-        )
-# Define properties for Android with Qt 5 after find_package() calls as:
-#    set(ANDROID_PACKAGE_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/android")
+        add_library(PROJET_SE SHARED ${PROJECT_SOURCES})
     else()
-        add_executable(PROJET_SE
-            ${PROJECT_SOURCES}
-        )
+        add_executable(PROJET_SE ${PROJECT_SOURCES})
     endif()
 endif()
 
-target_link_libraries(PROJET_SE PRIVATE Qt${QT_VERSION_MAJOR}::Widgets)
+# 🔹 LIAISON ICI (APRÈS add_executable)
+target_link_libraries(PROJET_SE PRIVATE Qt${QT_VERSION_MAJOR}::Widgets Qt${QT_VERSION_MAJOR}::Charts)
 
 set_target_properties(PROJET_SE PROPERTIES
     MACOSX_BUNDLE_GUI_IDENTIFIER my.example.com

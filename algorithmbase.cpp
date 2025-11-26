@@ -4,7 +4,7 @@
 
 AlgorithmBase :: AlgorithmBase(QString algorithmName , QObject *parent )  : QObject(parent),
     m_algorithmName(algorithmName),
-    m_speed(30),
+    m_speed(50),
     m_clock(0),
     m_numCompleted(0),
     m_totalProcesses(0),
@@ -144,4 +144,8 @@ void AlgorithmBase::recordCompletion(const Process &p)
 int AlgorithmBase::getclock()
 {
     return m_clock;
+}
+bool AlgorithmBase :: get_isrunning()
+{
+    return m_isRunning;
 }
