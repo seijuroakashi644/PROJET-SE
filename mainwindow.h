@@ -5,6 +5,7 @@
 #include "process.h"
 #include "fcfs.h"
 #include "sjf.h"
+#include "circularqueuewidget.h"
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
 QT_END_NAMESPACE
@@ -42,6 +43,16 @@ private slots:
 
     void on_btnStop_clicked();
 
+    void on_BtnAuto_clicked();
+
+    void on_BtnManual_clicked();
+
+    void on_btnAddOrder_clicked();
+
+    void on_bntAddOrder_clicked();
+
+    void on_btnDisplayAddOrder_clicked();
+
 private:
     Ui::MainWindow *ui;
     AlgorithmBase *current_scheduler;
@@ -54,6 +65,8 @@ private:
     void startNextAlgorithm();
     void clearVisualization();
     QVector<Process> processes;
+    CircularQueueWidget *circularQueue;
+    bool isRoundRobinActive();
 
 };
 #endif // MAINWINDOW_H

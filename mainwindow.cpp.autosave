@@ -778,6 +778,7 @@ void MainWindow::on_bntAddOrder_clicked()
     int np_priority = tmp.toInt();
     tmp = ui->newOrderDeadline->text();
     int np_deadline = tmp.toInt();
+    
     processes.append(Process(np_burst, arrival, numZero + i + 1, np_priority, -1));
 
 }

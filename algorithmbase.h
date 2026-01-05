@@ -38,6 +38,7 @@ public:
    QString getAlgorithmName() const { return m_algorithmName; }
    int getNumCompleted();
    bool get_isrunning();
+   QVector<Process> getQueue() const { return m_queue;}
 protected:
 
 
