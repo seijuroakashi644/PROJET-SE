@@ -15,6 +15,7 @@ protected:
 private :
     int quantum;
     int quantum_used;
+
 };
 
 #endif // ROUND_ROBIN_H

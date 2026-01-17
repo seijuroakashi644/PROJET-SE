@@ -67,6 +67,9 @@ void round_robin_multiniveaux::executeStep()
         recordCompletion(current);
         m_queue.removeFirst();
         quantum_used = 0;
+        if (!m_queue.isEmpty()) {
+            m_stats.contextSwitches++;
+        }
 
         // ✅ Le prochain processus sera automatiquement le plus prioritaire
         // car la queue est triée
@@ -77,6 +80,9 @@ void round_robin_multiniveaux::executeStep()
             .arg(m_clock)
             .arg(current.get_pid()));
 
+        m_clock += m_contextSwitchTime;
+           emit clockUpdated(m_clock);
+           emit logMessage(QString("⏱️ Context switch overhead: +%1ms").arg(m_contextSwitchTime));
         // ✅ Déplace à la fin
         m_queue.append(current);
         m_queue.removeFirst();

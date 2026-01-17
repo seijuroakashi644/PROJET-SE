@@ -83,8 +83,8 @@ void EDF::executeStep()
         m_lastPid = current.get_pid();
         m_queue.removeFirst();
 
-        if (!m_queue.isEmpty()) {
+    /*    if (!m_queue.isEmpty()) {
             m_stats.contextSwitches++;
-        }
+        }*/
     }
 }

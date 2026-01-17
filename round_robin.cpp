@@ -78,6 +78,10 @@ void round_robin::executeStep()
 
         m_lastPid = current.get_pid();
 
+        m_clock += m_contextSwitchTime;
+           emit clockUpdated(m_clock);
+           emit logMessage(QString("⏱️ Context switch overhead: +%1ms").arg(m_contextSwitchTime));
+
         // Déplace le processus à la fin de la file
         m_queue.append(current);
         m_queue.removeFirst();

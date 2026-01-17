@@ -1,6 +1,17 @@
 #include "process.h"
 #include <QDebug>
-
+Process::Process()
+{
+    this->pid = 0;
+    this->arrival_time = 0;
+    this->burst_time = 0;
+    this->burst_left = 0;
+    this->priority = 0;
+    this->initial_wait = 0;
+    this->total_wait = 0;
+    this->executed = false;
+    this->deadline = -1;
+}
 Process::Process(int burst , int arrival , int pid , int priority , int deadline)
 {
     this->pid = pid ;
@@ -12,6 +23,7 @@ Process::Process(int burst , int arrival , int pid , int priority , int deadline
     this->total_wait = 0;
     this->executed = false ;
     this->deadline = deadline;
+
 
 }
 void Process::set_pid(int num)
@@ -95,3 +107,4 @@ void Process::set_deadline(int deadline)
 }
 int Process::get_deadline() const { return deadline; }
  bool Process::hasDeadline() const { return deadline > 0; }
+int Process::last_pid = 0;

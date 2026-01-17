@@ -35,6 +35,8 @@ set(PROJECT_SOURCES
         round_robin_multiniveaux.cpp
         edf.h
         edf.cpp
+        algorithmrecommender.h
+        algorithmrecommender.cpp
 
 )
 

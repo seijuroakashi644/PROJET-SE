@@ -60,7 +60,7 @@
        </font>
       </property>
       <property name="text">
-       <string>Horloge : 50 s</string>
+       <string>Horloge : 0 min</string>
       </property>
       <property name="alignment">
        <set>Qt::AlignCenter</set>
@@ -129,7 +129,7 @@ border-radius : 10px
       <widget class="QLabel" name="rp_id">
        <property name="geometry">
         <rect>
-         <x>60</x>
+         <x>50</x>
          <y>70</y>
          <width>211</width>
          <height>20</height>
@@ -144,7 +144,7 @@ border-radius : 10px
         <string notr="true">border : 0px</string>
        </property>
        <property name="text">
-        <string>ID : </string>
+        <string>Commande N° : </string>
        </property>
       </widget>
       <widget class="QLabel" name="rp_burst_left">
@@ -341,13 +341,13 @@ QWidget#waitingWidget &gt; * {
        </rect>
       </property>
       <property name="text">
-       <string>PushButton</string>
+       <string>OFF</string>
       </property>
       <property name="checkable">
        <bool>true</bool>
       </property>
       <property name="checked">
-       <bool>true</bool>
+       <bool>false</bool>
       </property>
      </widget>
      <widget class="QPushButton" name="btnDisplayAddOrder">
@@ -355,7 +355,7 @@ QWidget#waitingWidget &gt; * {
        <rect>
         <x>1098</x>
         <y>540</y>
-        <width>91</width>
+        <width>181</width>
         <height>25</height>
        </rect>
       </property>
@@ -369,9 +369,9 @@ QWidget#waitingWidget &gt; * {
       </property>
       <property name="geometry">
        <rect>
-        <x>1040</x>
-        <y>10</y>
-        <width>291</width>
+        <x>780</x>
+        <y>160</y>
+        <width>441</width>
         <height>261</height>
        </rect>
       </property>
@@ -384,9 +384,9 @@ QWidget#waitingWidget &gt; * {
       <widget class="QLineEdit" name="newOrderBurst">
        <property name="geometry">
         <rect>
-         <x>150</x>
-         <y>10</y>
-         <width>113</width>
+         <x>260</x>
+         <y>20</y>
+         <width>111</width>
          <height>31</height>
         </rect>
        </property>
@@ -394,8 +394,8 @@ QWidget#waitingWidget &gt; * {
       <widget class="QLineEdit" name="newOrderDeadline">
        <property name="geometry">
         <rect>
-         <x>150</x>
-         <y>60</y>
+         <x>260</x>
+         <y>70</y>
          <width>113</width>
          <height>31</height>
         </rect>
@@ -404,7 +404,7 @@ QWidget#waitingWidget &gt; * {
       <widget class="QLineEdit" name="newOrderPriority">
        <property name="geometry">
         <rect>
-         <x>150</x>
+         <x>260</x>
          <y>110</y>
          <width>113</width>
          <height>31</height>
@@ -414,7 +414,7 @@ QWidget#waitingWidget &gt; * {
       <widget class="QPushButton" name="bntAddOrder">
        <property name="geometry">
         <rect>
-         <x>160</x>
+         <x>270</x>
          <y>190</y>
          <width>89</width>
          <height>25</height>
@@ -422,6 +422,86 @@ QWidget#waitingWidget &gt; * {
        </property>
        <property name="text">
         <string>Ajouter</string>
+       </property>
+      </widget>
+      <widget class="QLabel" name="label">
+       <property name="geometry">
+        <rect>
+         <x>40</x>
+         <y>26</y>
+         <width>161</width>
+         <height>21</height>
+        </rect>
+       </property>
+       <property name="font">
+        <font>
+         <pointsize>14</pointsize>
+        </font>
+       </property>
+       <property name="text">
+        <string>Temps de couture</string>
+       </property>
+      </widget>
+      <widget class="QLabel" name="label_2">
+       <property name="geometry">
+        <rect>
+         <x>40</x>
+         <y>70</y>
+         <width>131</width>
+         <height>17</height>
+        </rect>
+       </property>
+       <property name="font">
+        <font>
+         <pointsize>14</pointsize>
+        </font>
+       </property>
+       <property name="text">
+        <string>Echéance</string>
+       </property>
+      </widget>
+      <widget class="QLabel" name="label_3">
+       <property name="geometry">
+        <rect>
+         <x>40</x>
+         <y>110</y>
+         <width>91</width>
+         <height>17</height>
+        </rect>
+       </property>
+       <property name="font">
+        <font>
+         <pointsize>14</pointsize>
+        </font>
+       </property>
+       <property name="text">
+        <string>Priorité</string>
+       </property>
+      </widget>
+      <widget class="QLabel" name="label_4">
+       <property name="geometry">
+        <rect>
+         <x>380</x>
+         <y>30</y>
+         <width>41</width>
+         <height>17</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>min</string>
+       </property>
+      </widget>
+      <widget class="QLabel" name="label_5">
+       <property name="geometry">
+        <rect>
+         <x>380</x>
+         <y>80</y>
+         <width>41</width>
+         <height>17</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>min</string>
        </property>
       </widget>
      </widget>

@@ -14,6 +14,7 @@ void fcfs::executeStep()
     // === PREMIER ACCÈS AU CPU ===
     if (!current.get_executed()) {
         int waitTime = m_clock - current.get_arrival();
+
         current.set_executed(waitTime);
         qDebug() << m_clock << "ms  Process " << current.get_pid() << "  accessed CPU (initial wait: " <<waitTime << "ms " ;
         emit logMessage(QString("[%1ms] Process %2 accessed CPU (initial wait: %3ms)")
@@ -63,8 +64,8 @@ void fcfs::executeStep()
         m_queue.removeFirst();
 
         // Si il reste des processus, compte un context switch
-        if (!m_queue.isEmpty()) {
+      /*  if (!m_queue.isEmpty()) {
             m_stats.contextSwitches++;
-        }
+        }*/
     }
 }

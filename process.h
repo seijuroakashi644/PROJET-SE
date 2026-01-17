@@ -15,7 +15,9 @@ private:
             bool executed;
             int premp_time;
             int deadline;
+
 public:
+            Process();
 
     Process(int burst , int arrival , int pid , int priority, int deadline);
             void set_arrival(int time);
@@ -35,6 +37,7 @@ public:
             int get_deadline() const;
             bool hasDeadline() const ;
             void set_deadline(int deadline) ;
+             static int last_pid;
 
 
 };

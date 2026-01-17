@@ -39,6 +39,16 @@ public:
    int getNumCompleted();
    bool get_isrunning();
    QVector<Process> getQueue() const { return m_queue;}
+   void setManualClock(int clock);
+   int getClock() const { return m_clock; }  // Renomme getclock() pour cohérence
+
+   void addProcessToQueue(const Process& p) {
+           m_queue.append(p);
+           emit processArrived(p);
+           emit logMessage(QString("[%1ms] Process %2 added to queue manually")
+               .arg(m_clock)
+               .arg(p.get_pid()));
+       }
 protected:
 
 
@@ -63,6 +73,7 @@ protected:
     QVector<Process> m_originalProcesses;  // Sauvegarde pour reset
     Statistics m_stats;                 // Statistiques de cet algo
     int m_lastPid;                      // PID du dernier processus exécuté
+    int m_contextSwitchTime;
 
     // === MÉTHODES UTILITAIRES (utilisables par les classes filles) ===
 

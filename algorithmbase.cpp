@@ -1,4 +1,4 @@
-#include "algorithmbase.h"
+﻿#include "algorithmbase.h"
 #include <QVector>
 #include <QDebug>
 
@@ -10,7 +10,8 @@ AlgorithmBase :: AlgorithmBase(QString algorithmName , QObject *parent )  : QObj
     m_totalProcesses(0),
     m_isRunning(false),
     m_stats(algorithmName),
-    m_lastPid(0)
+    m_lastPid(0),
+    m_contextSwitchTime(5)
 {  m_timer = new QTimer(this);
 connect(m_timer, &QTimer::timeout, this, &AlgorithmBase::tick);
 }
@@ -113,9 +114,9 @@ void AlgorithmBase::recordCompletion(const Process &p)
 {
     // Calcule les métriques
     int turnaround = m_clock - p.get_arrival();
-    int totalWait = turnaround - p.get_burst();
+    int totalWait = turnaround - p.get_burst();  // ✅ Correct : total - exécution
 
-    // Enregistre dans les statistiques (fait les comparaisons min/max automatiquement)
+    // Enregistre dans les statistiques
     m_stats.recordProcess(turnaround, totalWait, p.get_initial_wait());
 
     // Log
@@ -125,12 +126,8 @@ void AlgorithmBase::recordCompletion(const Process &p)
         .arg(turnaround)
         .arg(totalWait));
 
-
-
-
     // Incrémente le compteur
     m_numCompleted++;
-     // Émet un signal pour l'interface
     emit processCompleted(p, m_numCompleted);
     qDebug() << "processus terminés " << m_numCompleted;
 
@@ -149,3 +146,9 @@ bool AlgorithmBase :: get_isrunning()
 {
     return m_isRunning;
 }
+
+void AlgorithmBase::setManualClock(int clock) {
+        m_clock = clock;
+        emit clockUpdated(m_clock);
+    }
+
